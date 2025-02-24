@@ -9,28 +9,25 @@ import SwiftUI
 import SwiftData
 
 struct ContentView: View {
+    @Environment(\.colorScheme) var colorScheme
     @Environment(\.modelContext) private var modelContext
     @Query private var items: [Item]
 
     var body: some View {
-//        ZStack{
-//            Color.black
             HStack{
                 Image(systemName: "car.fill")
                     .imageScale(.large)
-                    .foregroundColor(Color.blue)
+                    .foregroundColor(Color.green)
                 Text("Guuber")
                     .font(.largeTitle)
                     .fontWeight(.bold)
-                    .foregroundColor(Color.black)
+                    .foregroundColor(colorScheme == .dark ? .white : .black)
                     .multilineTextAlignment(.center)
                 Text("BETA")
-                    .foregroundColor(Color.blue)
+                    .foregroundColor(Color.green)
                 
-                
-                
+            
             }
-       // }
         NavigationSplitView {
             List {
                 ForEach(items) { item in

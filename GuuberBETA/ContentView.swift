@@ -13,6 +13,24 @@ struct ContentView: View {
     @Query private var items: [Item]
 
     var body: some View {
+//        ZStack{
+//            Color.black
+            HStack{
+                Image(systemName: "car.fill")
+                    .imageScale(.large)
+                    .foregroundColor(Color.blue)
+                Text("Guuber")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+                    .foregroundColor(Color.black)
+                    .multilineTextAlignment(.center)
+                Text("BETA")
+                    .foregroundColor(Color.blue)
+                
+                
+                
+            }
+       // }
         NavigationSplitView {
             List {
                 ForEach(items) { item in

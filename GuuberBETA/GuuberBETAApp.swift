@@ -8,6 +8,8 @@
 import SwiftUI
 import SwiftData
 
+
+
 @main
 struct GuuberBETAApp: App {
     var sharedModelContainer: ModelContainer = {

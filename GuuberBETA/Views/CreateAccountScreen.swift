@@ -17,6 +17,10 @@ struct CreateAccountScreen: View {
     @State private var isPasswordFieldVisible: Bool = false
     @State private var isReenterPasswordFieldVisible: Bool = false
     @State private var navigateToPhoneNumberVer: Bool = false // State to control navigation
+    @State private var showContinueButton: Bool = false // State to control button visibility
+
+    // Customizable button color
+    @State private var buttonColor: Color = .green // You can change this to any color
 
     var body: some View {
         NavigationStack {
@@ -79,6 +83,7 @@ struct CreateAccountScreen: View {
                             withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.5)) {
                                 isPasswordFieldVisible = false
                                 isReenterPasswordFieldVisible = false
+                                showContinueButton = false // Hide button if username changes
                             }
                         }
                     }
@@ -105,6 +110,7 @@ struct CreateAccountScreen: View {
                         if isReenterPasswordFieldVisible {
                             withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.5)) {
                                 isReenterPasswordFieldVisible = false
+                                showContinueButton = false // Hide button if password changes
                             }
                         }
                     }
@@ -115,10 +121,11 @@ struct CreateAccountScreen: View {
                     SecureField("Re-Enter Password", text: $reenterPassword, onCommit: {
                         // Triggered when the user hits "Enter" on the Re-Enter Password field
                         if password == reenterPassword {
-                            navigateToPhoneNumberVer = true // Navigate if passwords match
+                            withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.5)) {
+                                showContinueButton = true // Show button if passwords match
+                            }
                         } else {
-                            // Show an error or handle mismatched passwords
-                            print("Passwords do not match!")
+                            showContinueButton = false // Hide button if passwords don't match
                         }
                     })
                     .textFieldStyle(SoftRoundedTextFieldStyle())
@@ -128,6 +135,35 @@ struct CreateAccountScreen: View {
                         removal: .opacity.combined(with: .move(edge: .top))
                     ))
                     .font(.system(size: 20, weight: .bold, design: .default))
+                    .onChange(of: reenterPassword) { newValue in
+                        // Check if passwords match and show/hide button accordingly
+                        if password == reenterPassword {
+                            withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.5)) {
+                                showContinueButton = true
+                            }
+                        } else {
+                            showContinueButton = false
+                        }
+                    }
+                }
+
+                // Continue Button (Animated)
+                if showContinueButton {
+                    Button(action: {
+                        navigateToPhoneNumberVer = true // Navigate to the next screen
+                    }) {
+                        Text("Continue")
+                            .font(.system(size: 20, weight: .bold, design: .default))
+                            .foregroundColor(.white) // Text color changes based on colorScheme
+                            .frame(width: 370, height: 60) // Slightly taller than text fields
+                            .background(buttonColor) // Use the customizable button color
+                            .cornerRadius(15)
+                            .padding(.top, 10) // Add some spacing between the button and the re-enter password field
+                    }
+                    .transition(.asymmetric(
+                        insertion: .opacity.combined(with: .move(edge: .top)),
+                        removal: .opacity.combined(with: .move(edge: .top))
+                    ))
                 }
             }
             .padding(.horizontal) // Add horizontal padding only

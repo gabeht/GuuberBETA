@@ -27,7 +27,7 @@ struct GuuberBETAApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            MainView()
                 .accentColor(.green)
         }
         .modelContainer(sharedModelContainer)

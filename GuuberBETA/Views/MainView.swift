@@ -8,7 +8,7 @@
 import SwiftUI
 import SwiftData
 
-struct ContentView: View {
+struct MainView: View {
     @Environment(\.colorScheme) var colorScheme
     @Environment(\.modelContext) private var modelContext
     @Query private var items: [Item]
@@ -30,3 +30,8 @@ struct ContentView: View {
         }
     }
 }
+#Preview {
+    MainView()
+        .modelContainer(for: Item.self, inMemory: true)
+}
+

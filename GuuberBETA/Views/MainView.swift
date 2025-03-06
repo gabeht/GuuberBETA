@@ -14,19 +14,27 @@ struct MainView: View {
     @Query private var items: [Item]
     
     var body: some View {
-        HStack{
-            Image(systemName: "car.fill")
-                .imageScale(.large)
-                .foregroundColor(Color.green)
-            Text("Guuber")
-                .font(.largeTitle)
-                .fontWeight(.bold)
-                .foregroundColor(colorScheme == .dark ? .white : .black)
-                .multilineTextAlignment(.center)
-            Text("BETA")
-                .foregroundColor(Color.green)
-            
-            
+        NavigationView { // Move NavigationView to the top level
+            VStack {
+                NavigationLink(destination: CreateAccountScreen()) {
+                    Text("Click to go to")
+                        .frame(width: 200, height: 50, alignment: .center)
+                }
+                
+                HStack {
+                    Image(systemName: "car.fill")
+                        .imageScale(.large)
+                        .foregroundColor(Color.green)
+                    Text("GÜHBER")
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                        .foregroundColor(colorScheme == .dark ? .white : .black)
+                        .multilineTextAlignment(.center)
+                    Text("BETA")
+                        .foregroundColor(Color.green)
+                }
+                .padding() // Add padding to the HStack to prevent bleeding
+            }
         }
     }
 }

@@ -40,15 +40,12 @@ struct CreateAccountScreen: View {
                 HStack(spacing: 10) {
                     TextField("First Name", text: $firstName, onCommit: {
                         // Triggered when the user hits "Enter" on the First Name field
-                        if !firstName.isEmpty && !lastName.isEmpty {
-                            withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.5)) {
-                                isUsernameFieldVisible = true
-                                focusedField = .lastName // Move focus to Last Name
-                            }
+                        if !firstName.isEmpty {
+                            focusedField = .lastName // Move focus to Last Name
                         }
                     })
                     .textFieldStyle(SoftRoundedTextFieldStyle())
-                    .frame(width: 180, height: 50) // Increased width
+                    .frame(width: 180, height: 50) // Same width as Last Name
                     .autocapitalization(.words)
                     .disableAutocorrection(true)
                     .font(.system(size: 20, weight: .bold, design: .default))
@@ -70,7 +67,7 @@ struct CreateAccountScreen: View {
                         }
                     })
                     .textFieldStyle(SoftRoundedTextFieldStyle())
-                    .frame(width: 180, height: 50) // Increased width
+                    .frame(width: 180, height: 50) // Same width as First Name
                     .autocapitalization(.words)
                     .disableAutocorrection(true)
                     .font(.system(size: 20, weight: .bold, design: .default))

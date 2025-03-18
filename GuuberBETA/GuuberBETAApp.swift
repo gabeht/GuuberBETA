@@ -8,6 +8,8 @@
 import SwiftUI
 import SwiftData
 
+
+
 @main
 struct GuuberBETAApp: App {
     var sharedModelContainer: ModelContainer = {
@@ -25,7 +27,8 @@ struct GuuberBETAApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            MainView()
+                .accentColor(.green)
         }
         .modelContainer(sharedModelContainer)
     }

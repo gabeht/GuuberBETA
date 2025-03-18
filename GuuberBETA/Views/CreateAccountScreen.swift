@@ -27,7 +27,7 @@ struct CreateAccountScreen: View {
         ZStack {
             // Video Background
             VideoBackgroundView(darkModeVideoName: "dark_background", lightModeVideoName: "light_background")
-                .blur(radius: 3) // Add slight blur for better text visibility
+                .ignoresSafeArea()
             
             // Content
             NavigationStack {

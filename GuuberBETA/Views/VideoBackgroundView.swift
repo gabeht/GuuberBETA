@@ -14,7 +14,7 @@ struct VideoBackgroundView: View {
                 // Fallback gradient background
                 if player == nil {
                     backgroundGradient
-                        .edgesIgnoringSafeArea(.all)
+                        .ignoresSafeArea()
                         .overlay(
                             VStack {
                                 Text(debugMessage)
@@ -33,14 +33,22 @@ struct VideoBackgroundView: View {
                         )
                 } else {
                     VideoPlayer(player: player!)
-                        .edgesIgnoringSafeArea(.all)
+                        .ignoresSafeArea()
                         .frame(width: geometry.size.width, height: geometry.size.height)
+                        .aspectRatio(contentMode: .fill)
                         .disabled(true)
                 }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .onAppear {
             setupPlayer()
+        }
+        .onDisappear {
+            // Clean up player when view disappears
+            player?.pause()
+            player = nil
+            NotificationCenter.default.removeObserver(self)
         }
     }
     
@@ -79,6 +87,7 @@ struct VideoBackgroundView: View {
         debugMessage = "Found video at: \(url.path)"
         let newPlayer = AVPlayer(url: url)
         newPlayer.actionAtItemEnd = .none
+        newPlayer.isMuted = true // Mute the video for background use
         
         // Remove any existing observers
         NotificationCenter.default.removeObserver(self)
@@ -97,6 +106,10 @@ struct VideoBackgroundView: View {
 }
 
 #Preview {
-    VideoBackgroundView(darkModeVideoName: "dark_background", lightModeVideoName: "light_background")
-        .frame(height: 400)
+    ZStack {
+        VideoBackgroundView(darkModeVideoName: "dark_background", lightModeVideoName: "light_background")
+        Text("Content")
+            .foregroundColor(.white)
+            .font(.largeTitle)
+    }
 } 

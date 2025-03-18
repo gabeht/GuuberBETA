@@ -18,7 +18,7 @@ struct CreateAccountScreen: View {
     @State private var isReenterPasswordFieldVisible: Bool = false
     @State private var navigateToPhoneNumberVer: Bool = false
     @State private var showContinueButton: Bool = false
-    @State private var buttonColor: Color = .green
+    @State private var buttonColor: Color = .purple
     @State private var shakeReenterPasswordField: Bool = false
     @State private var highlightReenterPasswordField: Bool = false
     @FocusState private var focusedField: Field?

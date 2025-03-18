@@ -6,6 +6,21 @@
 
 
 import SwiftUI
+import AVKit
+
+struct CreateAccountScreenWrapper: View {
+    var body: some View {
+        ZStack {
+            // Video Background
+            VideoBackgroundView(darkModeVideoName: "dark_background", lightModeVideoName: "light_background")
+                .ignoresSafeArea()
+            
+            // Content
+            CreateAccountScreen()
+                .background(Color(.systemBackground).opacity(0.7))
+        }
+    }
+}
 
 struct CreateAccountScreen: View {
     @State private var firstName: String = ""
@@ -22,183 +37,212 @@ struct CreateAccountScreen: View {
     @State private var shakeReenterPasswordField: Bool = false
     @State private var highlightReenterPasswordField: Bool = false
     @FocusState private var focusedField: Field?
+    @State private var player: AVPlayer?
 
     var body: some View {
         GeometryReader { geometry in
             ZStack {
-                // Video Background Layer
-                VideoBackgroundView(darkModeVideoName: "dark_background", lightModeVideoName: "light_background")
-                    .ignoresSafeArea()
+                // Video Background
+                if let player = player {
+                    VideoPlayer(player: player)
+                        .ignoresSafeArea()
+                        .frame(width: geometry.size.width, height: geometry.size.height)
+                        .aspectRatio(contentMode: .fill)
+                        .disabled(true)
+                } else {
+                    Color.black
+                        .ignoresSafeArea()
+                }
                 
-                // Content Layer
+                // Content
                 NavigationStack {
-                    ZStack {
-                        // Semi-transparent background for better readability
-                        Color(.systemBackground)
-                            .opacity(0.7)
-                            .ignoresSafeArea()
-                        
-                        // Form Content
-                        VStack(alignment: .leading, spacing: 10) {
-                            // First Name and Last Name Fields
-                            HStack(spacing: 10) {
-                                TextField("First Name", text: $firstName, onCommit: {
-                                    if !firstName.isEmpty {
-                                        focusedField = .lastName
-                                    }
-                                })
-                                .textFieldStyle(SoftRoundedTextFieldStyle())
-                                .frame(width: 180, height: 50)
-                                .autocapitalization(.words)
-                                .disableAutocorrection(true)
-                                .font(.system(size: 20, weight: .bold, design: .default))
-                                .focused($focusedField, equals: .firstName)
-                                .onChange(of: firstName) { newValue in
-                                    firstName = newValue.replacingOccurrences(of: " ", with: "")
-                                    resetFieldsBelow(.firstName)
+                    VStack(alignment: .leading, spacing: 10) {
+                        // First Name and Last Name Fields
+                        HStack(spacing: 10) {
+                            TextField("First Name", text: $firstName, onCommit: {
+                                if !firstName.isEmpty {
+                                    focusedField = .lastName
                                 }
-
-                                TextField("Last Name", text: $lastName, onCommit: {
-                                    if !firstName.isEmpty && !lastName.isEmpty {
-                                        withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.5)) {
-                                            isUsernameFieldVisible = true
-                                            focusedField = .username
-                                        }
-                                    }
-                                })
-                                .textFieldStyle(SoftRoundedTextFieldStyle())
-                                .frame(width: 180, height: 50)
-                                .autocapitalization(.words)
-                                .disableAutocorrection(true)
-                                .font(.system(size: 20, weight: .bold, design: .default))
-                                .focused($focusedField, equals: .lastName)
-                                .onChange(of: lastName) { newValue in
-                                    lastName = newValue.replacingOccurrences(of: " ", with: "")
-                                    resetFieldsBelow(.lastName)
-                                }
+                            })
+                            .textFieldStyle(SoftRoundedTextFieldStyle())
+                            .frame(width: 180, height: 50)
+                            .autocapitalization(.words)
+                            .disableAutocorrection(true)
+                            .font(.system(size: 20, weight: .bold, design: .default))
+                            .focused($focusedField, equals: .firstName)
+                            .onChange(of: firstName) { newValue in
+                                firstName = newValue.replacingOccurrences(of: " ", with: "")
+                                resetFieldsBelow(.firstName)
                             }
 
-                            // Username Field
-                            if isUsernameFieldVisible {
-                                TextField("Username", text: $username, onCommit: {
+                            TextField("Last Name", text: $lastName, onCommit: {
+                                if !firstName.isEmpty && !lastName.isEmpty {
                                     withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.5)) {
-                                        isPasswordFieldVisible = true
-                                        focusedField = .password
-                                    }
-                                })
-                                .textFieldStyle(SoftRoundedTextFieldStyle())
-                                .frame(width: 370, height: 50)
-                                .autocapitalization(.words)
-                                .disableAutocorrection(true)
-                                .font(.system(size: 20, weight: .bold, design: .default))
-                                .focused($focusedField, equals: .username)
-                                .transition(.asymmetric(
-                                    insertion: .opacity.combined(with: .move(edge: .top)),
-                                    removal: .opacity.combined(with: .move(edge: .top))
-                                ))
-                                .onChange(of: username) { newValue in
-                                    username = newValue.replacingOccurrences(of: " ", with: "")
-                                    resetFieldsBelow(.username)
-                                }
-                            }
-
-                            // Password Field
-                            if isPasswordFieldVisible {
-                                SecureField("Password", text: $password, onCommit: {
-                                    withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.5)) {
-                                        isReenterPasswordFieldVisible = true
-                                        focusedField = .reenterPassword
-                                    }
-                                })
-                                .textFieldStyle(SoftRoundedTextFieldStyle())
-                                .frame(width: 370, height: 50)
-                                .transition(.asymmetric(
-                                    insertion: .opacity.combined(with: .move(edge: .top)),
-                                    removal: .opacity.combined(with: .move(edge: .top))
-                                ))
-                                .font(.system(size: 20, weight: .bold, design: .default))
-                                .focused($focusedField, equals: .password)
-                                .onChange(of: password) { newValue in
-                                    password = newValue.replacingOccurrences(of: " ", with: "")
-                                    resetFieldsBelow(.password)
-                                }
-                            }
-
-                            // Re-Enter Password Field
-                            if isReenterPasswordFieldVisible {
-                                SecureField("Re-Enter Password", text: $reenterPassword, onCommit: {
-                                    if password == reenterPassword {
-                                        navigateToPhoneNumberVer = true
-                                    } else {
-                                        withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.5)) {
-                                            shakeReenterPasswordField = true
-                                            highlightReenterPasswordField = true
-                                        }
-                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-                                            withAnimation {
-                                                shakeReenterPasswordField = false
-                                                highlightReenterPasswordField = false
-                                            }
-                                        }
-                                    }
-                                })
-                                .textFieldStyle(SoftRoundedTextFieldStyle(highlight: highlightReenterPasswordField))
-                                .frame(width: 370, height: 50)
-                                .transition(.asymmetric(
-                                    insertion: .opacity.combined(with: .move(edge: .top)),
-                                    removal: .opacity.combined(with: .move(edge: .top))
-                                ))
-                                .font(.system(size: 20, weight: .bold, design: .default))
-                                .focused($focusedField, equals: .reenterPassword)
-                                .modifier(ShakeEffect(animatableData: shakeReenterPasswordField ? 1 : 0))
-                                .onChange(of: reenterPassword) { newValue in
-                                    reenterPassword = newValue.replacingOccurrences(of: " ", with: "")
-                                    if password == reenterPassword {
-                                        withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.5)) {
-                                            showContinueButton = true
-                                        }
-                                    } else {
-                                        withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.5)) {
-                                            showContinueButton = false
-                                        }
+                                        isUsernameFieldVisible = true
+                                        focusedField = .username
                                     }
                                 }
+                            })
+                            .textFieldStyle(SoftRoundedTextFieldStyle())
+                            .frame(width: 180, height: 50)
+                            .autocapitalization(.words)
+                            .disableAutocorrection(true)
+                            .font(.system(size: 20, weight: .bold, design: .default))
+                            .focused($focusedField, equals: .lastName)
+                            .onChange(of: lastName) { newValue in
+                                lastName = newValue.replacingOccurrences(of: " ", with: "")
+                                resetFieldsBelow(.lastName)
                             }
+                        }
 
-                            // Continue Button
-                            if showContinueButton {
-                                Button(action: {
+                        // Username Field
+                        if isUsernameFieldVisible {
+                            TextField("Username", text: $username, onCommit: {
+                                withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.5)) {
+                                    isPasswordFieldVisible = true
+                                    focusedField = .password
+                                }
+                            })
+                            .textFieldStyle(SoftRoundedTextFieldStyle())
+                            .frame(width: 370, height: 50)
+                            .autocapitalization(.words)
+                            .disableAutocorrection(true)
+                            .font(.system(size: 20, weight: .bold, design: .default))
+                            .focused($focusedField, equals: .username)
+                            .transition(.asymmetric(
+                                insertion: .opacity.combined(with: .move(edge: .top)),
+                                removal: .opacity.combined(with: .move(edge: .top))
+                            ))
+                            .onChange(of: username) { newValue in
+                                username = newValue.replacingOccurrences(of: " ", with: "")
+                                resetFieldsBelow(.username)
+                            }
+                        }
+
+                        // Password Field
+                        if isPasswordFieldVisible {
+                            SecureField("Password", text: $password, onCommit: {
+                                withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.5)) {
+                                    isReenterPasswordFieldVisible = true
+                                    focusedField = .reenterPassword
+                                }
+                            })
+                            .textFieldStyle(SoftRoundedTextFieldStyle())
+                            .frame(width: 370, height: 50)
+                            .transition(.asymmetric(
+                                insertion: .opacity.combined(with: .move(edge: .top)),
+                                removal: .opacity.combined(with: .move(edge: .top))
+                            ))
+                            .font(.system(size: 20, weight: .bold, design: .default))
+                            .focused($focusedField, equals: .password)
+                            .onChange(of: password) { newValue in
+                                password = newValue.replacingOccurrences(of: " ", with: "")
+                                resetFieldsBelow(.password)
+                            }
+                        }
+
+                        // Re-Enter Password Field
+                        if isReenterPasswordFieldVisible {
+                            SecureField("Re-Enter Password", text: $reenterPassword, onCommit: {
+                                if password == reenterPassword {
                                     navigateToPhoneNumberVer = true
-                                }) {
-                                    Text("Continue")
-                                        .font(.system(size: 20, weight: .bold, design: .default))
-                                        .foregroundColor(.white)
-                                        .frame(width: 370, height: 60)
-                                        .background(buttonColor)
-                                        .cornerRadius(15)
-                                        .padding(.top, 10)
+                                } else {
+                                    withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.5)) {
+                                        shakeReenterPasswordField = true
+                                        highlightReenterPasswordField = true
+                                    }
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                                        withAnimation {
+                                            shakeReenterPasswordField = false
+                                            highlightReenterPasswordField = false
+                                        }
+                                    }
                                 }
-                                .transition(.asymmetric(
-                                    insertion: .opacity.combined(with: .move(edge: .top)),
-                                    removal: .opacity.combined(with: .move(edge: .top))
-                                ))
+                            })
+                            .textFieldStyle(SoftRoundedTextFieldStyle(highlight: highlightReenterPasswordField))
+                            .frame(width: 370, height: 50)
+                            .transition(.asymmetric(
+                                insertion: .opacity.combined(with: .move(edge: .top)),
+                                removal: .opacity.combined(with: .move(edge: .top))
+                            ))
+                            .font(.system(size: 20, weight: .bold, design: .default))
+                            .focused($focusedField, equals: .reenterPassword)
+                            .modifier(ShakeEffect(animatableData: shakeReenterPasswordField ? 1 : 0))
+                            .onChange(of: reenterPassword) { newValue in
+                                reenterPassword = newValue.replacingOccurrences(of: " ", with: "")
+                                if password == reenterPassword {
+                                    withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.5)) {
+                                        showContinueButton = true
+                                    }
+                                } else {
+                                    withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.5)) {
+                                        showContinueButton = false
+                                    }
+                                }
                             }
                         }
-                        .padding(.horizontal, 20)
-                        .padding(.top, -20)
-                    }
-                    .navigationTitle("Create Account")
-                    .background(
-                        NavigationLink(destination: PhoneNumberVer(), isActive: $navigateToPhoneNumberVer) {
-                            EmptyView()
+
+                        // Continue Button
+                        if showContinueButton {
+                            Button(action: {
+                                navigateToPhoneNumberVer = true
+                            }) {
+                                Text("Continue")
+                                    .font(.system(size: 20, weight: .bold, design: .default))
+                                    .foregroundColor(.white)
+                                    .frame(width: 370, height: 60)
+                                    .background(buttonColor)
+                                    .cornerRadius(15)
+                                    .padding(.top, 10)
+                            }
+                            .transition(.asymmetric(
+                                insertion: .opacity.combined(with: .move(edge: .top)),
+                                removal: .opacity.combined(with: .move(edge: .top))
+                            ))
                         }
-                    )
-                    .onAppear {
-                        focusedField = .firstName
                     }
+                    .padding(.horizontal, 20)
+                    .padding(.top, -20)
+                    .background(Color(.systemBackground).opacity(0.7))
                 }
             }
         }
+        .navigationTitle("Create Account")
+        .background(
+            NavigationLink(destination: PhoneNumberVer(), isActive: $navigateToPhoneNumberVer) {
+                EmptyView()
+            }
+        )
+        .onAppear {
+            setupPlayer()
+            focusedField = .firstName
+        }
+        .onDisappear {
+            player?.pause()
+            player = nil
+            NotificationCenter.default.removeObserver(self)
+        }
+    }
+
+    private func setupPlayer() {
+        guard let path = Bundle.main.path(forResource: "dark_background", ofType: "mp4") else {
+            print("Could not find video file")
+            return
+        }
+        
+        let player = AVPlayer(url: URL(fileURLWithPath: path))
+        player.isMuted = true
+        
+        NotificationCenter.default.addObserver(
+            forName: .AVPlayerItemDidPlayToEndTime,
+            object: player.currentItem,
+            queue: .main) { _ in
+                player.seek(to: .zero)
+                player.play()
+            }
+        
+        self.player = player
+        player.play()
     }
 
     private func resetFieldsBelow(_ field: Field) {
@@ -256,8 +300,9 @@ struct ShakeEffect: GeometryEffect {
             y: 0))
     }
 }
+
 #Preview {
-    CreateAccountScreen()
+    CreateAccountScreenWrapper()
         .modelContainer(for: Item.self, inMemory: true)
 }
 

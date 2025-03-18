@@ -112,4 +112,5 @@ struct VideoBackgroundView: View {
             .foregroundColor(.white)
             .font(.largeTitle)
     }
+    .frame(height: 400)
 } 

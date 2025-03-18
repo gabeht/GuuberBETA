@@ -6,6 +6,7 @@ struct VideoBackgroundView: View {
     let lightModeVideoName: String
     @Environment(\.colorScheme) var colorScheme
     @State private var player: AVPlayer?
+    @State private var debugMessage: String = ""
     
     var body: some View {
         GeometryReader { geometry in
@@ -14,6 +15,22 @@ struct VideoBackgroundView: View {
                 if player == nil {
                     backgroundGradient
                         .edgesIgnoringSafeArea(.all)
+                        .overlay(
+                            VStack {
+                                Text(debugMessage)
+                                    .foregroundColor(.red)
+                                    .padding()
+                                if let url = Bundle.main.url(forResource: "dark_background", withExtension: "mp4") {
+                                    Text("Video URL exists: \(url.path)")
+                                        .foregroundColor(.green)
+                                        .padding()
+                                } else {
+                                    Text("Video URL not found in bundle")
+                                        .foregroundColor(.red)
+                                        .padding()
+                                }
+                            }
+                        )
                 } else {
                     VideoPlayer(player: player!)
                         .edgesIgnoringSafeArea(.all)
@@ -23,9 +40,6 @@ struct VideoBackgroundView: View {
             }
         }
         .onAppear {
-            setupPlayer()
-        }
-        .onChange(of: colorScheme) { _ in
             setupPlayer()
         }
     }
@@ -43,15 +57,32 @@ struct VideoBackgroundView: View {
     }
     
     private func setupPlayer() {
-        let videoName = colorScheme == .dark ? darkModeVideoName : lightModeVideoName
-        guard let path = Bundle.main.path(forResource: videoName, ofType: "mp4") else {
-            print("Could not find video file: \(videoName).mp4")
+        // Use only dark_background for now
+        guard let url = Bundle.main.url(forResource: "dark_background", withExtension: "mp4") else {
+            debugMessage = "Could not find video file in bundle"
+            
+            // Print bundle contents for debugging
+            if let bundlePath = Bundle.main.resourcePath {
+                print("Bundle path: \(bundlePath)")
+                do {
+                    let contents = try FileManager.default.contentsOfDirectory(atPath: bundlePath)
+                    print("Bundle contents: \(contents)")
+                } catch {
+                    print("Error reading bundle: \(error)")
+                }
+            }
+            
             player = nil
             return
         }
         
-        let newPlayer = AVPlayer(url: URL(fileURLWithPath: path))
+        debugMessage = "Found video at: \(url.path)"
+        let newPlayer = AVPlayer(url: url)
         newPlayer.actionAtItemEnd = .none
+        
+        // Remove any existing observers
+        NotificationCenter.default.removeObserver(self)
+        
         NotificationCenter.default.addObserver(
             forName: .AVPlayerItemDidPlayToEndTime,
             object: newPlayer.currentItem,
@@ -67,4 +98,5 @@ struct VideoBackgroundView: View {
 
 #Preview {
     VideoBackgroundView(darkModeVideoName: "dark_background", lightModeVideoName: "light_background")
+        .frame(height: 400)
 } 

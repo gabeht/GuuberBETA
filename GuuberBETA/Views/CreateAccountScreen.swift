@@ -7,6 +7,38 @@
 
 import SwiftUI
 
+struct PasswordRequirementsView: View {
+    let password: String
+    @Environment(\.colorScheme) var colorScheme
+    
+    private var requirements: [(String, Bool)] {
+        [
+            ("At least 8 characters", password.count >= 8),
+            ("Contains a letter", password.contains { $0.isLetter }),
+            ("Contains a number", password.contains { $0.isNumber }),
+            ("Contains special character", password.contains { "!@#$%^&*()_+-=[]{}|;:,.<>?".contains($0) })
+        ]
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            ForEach(requirements, id: \.0) { requirement in
+                HStack(spacing: 8) {
+                    Image(systemName: requirement.1 ? "checkmark.circle.fill" : "circle")
+                        .foregroundColor(requirement.1 ? .green : .gray)
+                        .font(.system(size: 12))
+                    
+                    Text(requirement.0)
+                        .font(.system(size: 12))
+                        .foregroundColor(.gray)
+                }
+            }
+        }
+        .padding(.horizontal, 4)
+        .padding(.top, 4)
+    }
+}
+
 struct CreateAccountScreen: View {
     @State private var firstName: String = ""
     @State private var lastName: String = ""
@@ -18,10 +50,19 @@ struct CreateAccountScreen: View {
     @State private var isReenterPasswordFieldVisible: Bool = false
     @State private var navigateToPhoneNumberVer: Bool = false
     @State private var showContinueButton: Bool = false
-    @State private var buttonColor: Color = .purple
+    @State private var buttonColor: Color = .green
     @State private var shakeReenterPasswordField: Bool = false
     @State private var highlightReenterPasswordField: Bool = false
     @FocusState private var focusedField: Field?
+    @State private var shakeFirstNameField: Bool = false
+    @State private var shakeLastNameField: Bool = false
+    @State private var shakeUsernameField: Bool = false
+    @State private var shakePasswordField: Bool = false
+    @State private var highlightFirstNameField: Bool = false
+    @State private var highlightLastNameField: Bool = false
+    @State private var highlightUsernameField: Bool = false
+    @State private var highlightPasswordField: Bool = false
+    @State private var showPasswordRequirements: Bool = false
 
     var body: some View {
         NavigationStack {
@@ -29,11 +70,23 @@ struct CreateAccountScreen: View {
                 // First Name and Last Name Fields
                 HStack(spacing: 10) {
                     TextField("First Name", text: $firstName, onCommit: {
-                        if !firstName.isEmpty {
+                        if isValidFirstName(firstName) {
                             focusedField = .lastName
+                        } else {
+                            withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.5)) {
+                                shakeFirstNameField = true
+                                highlightFirstNameField = true
+                            }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                                withAnimation {
+                                    shakeFirstNameField = false
+                                    highlightFirstNameField = false
+                                }
+                            }
                         }
                     })
-                    .textFieldStyle(SoftRoundedTextFieldStyle())
+                    .textFieldStyle(SoftRoundedTextFieldStyle(highlight: highlightFirstNameField))
+                    .modifier(ShakeEffect(animatableData: shakeFirstNameField ? 1 : 0))
                     .frame(width: 180, height: 50)
                     .autocapitalization(.words)
                     .disableAutocorrection(true)
@@ -45,14 +98,26 @@ struct CreateAccountScreen: View {
                     }
 
                     TextField("Last Name", text: $lastName, onCommit: {
-                        if !firstName.isEmpty && !lastName.isEmpty {
+                        if isValidLastName(lastName) && isValidFirstName(firstName) {
                             withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.5)) {
                                 isUsernameFieldVisible = true
                                 focusedField = .username
                             }
+                        } else {
+                            withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.5)) {
+                                shakeLastNameField = true
+                                highlightLastNameField = true
+                            }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                                withAnimation {
+                                    shakeLastNameField = false
+                                    highlightLastNameField = false
+                                }
+                            }
                         }
                     })
-                    .textFieldStyle(SoftRoundedTextFieldStyle())
+                    .textFieldStyle(SoftRoundedTextFieldStyle(highlight: highlightLastNameField))
+                    .modifier(ShakeEffect(animatableData: shakeLastNameField ? 1 : 0))
                     .frame(width: 180, height: 50)
                     .autocapitalization(.words)
                     .disableAutocorrection(true)
@@ -67,12 +132,26 @@ struct CreateAccountScreen: View {
                 // Username Field
                 if isUsernameFieldVisible {
                     TextField("Username", text: $username, onCommit: {
-                        withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.5)) {
-                            isPasswordFieldVisible = true
-                            focusedField = .password
+                        if isValidUsername(username) {
+                            withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.5)) {
+                                isPasswordFieldVisible = true
+                                focusedField = .password
+                            }
+                        } else {
+                            withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.5)) {
+                                shakeUsernameField = true
+                                highlightUsernameField = true
+                            }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                                withAnimation {
+                                    shakeUsernameField = false
+                                    highlightUsernameField = false
+                                }
+                            }
                         }
                     })
-                    .textFieldStyle(SoftRoundedTextFieldStyle())
+                    .textFieldStyle(SoftRoundedTextFieldStyle(highlight: highlightUsernameField))
+                    .modifier(ShakeEffect(animatableData: shakeUsernameField ? 1 : 0))
                     .frame(width: 370, height: 50)
                     .autocapitalization(.words)
                     .disableAutocorrection(true)
@@ -90,23 +169,47 @@ struct CreateAccountScreen: View {
 
                 // Password Field
                 if isPasswordFieldVisible {
-                    SecureField("Password", text: $password, onCommit: {
-                        withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.5)) {
-                            isReenterPasswordFieldVisible = true
-                            focusedField = .reenterPassword
+                    VStack(alignment: .leading, spacing: 0) {
+                        SecureField("Password", text: $password, onCommit: {
+                            if isValidPassword(password) {
+                                withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.5)) {
+                                    isReenterPasswordFieldVisible = true
+                                    focusedField = .reenterPassword
+                                }
+                            } else {
+                                withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.5)) {
+                                    shakePasswordField = true
+                                    highlightPasswordField = true
+                                }
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                                    withAnimation {
+                                        shakePasswordField = false
+                                        highlightPasswordField = false
+                                    }
+                                }
+                            }
+                        })
+                        .textFieldStyle(SoftRoundedTextFieldStyle(highlight: highlightPasswordField))
+                        .modifier(ShakeEffect(animatableData: shakePasswordField ? 1 : 0))
+                        .frame(width: 370, height: 50)
+                        .transition(.asymmetric(
+                            insertion: .opacity.combined(with: .move(edge: .top)),
+                            removal: .opacity.combined(with: .move(edge: .top))
+                        ))
+                        .font(.system(size: 20, weight: .bold, design: .default))
+                        .focused($focusedField, equals: .password)
+                        .onChange(of: password) { newValue in
+                            password = newValue.replacingOccurrences(of: " ", with: "")
+                            resetFieldsBelow(.password)
+                            withAnimation {
+                                showPasswordRequirements = !newValue.isEmpty
+                            }
                         }
-                    })
-                    .textFieldStyle(SoftRoundedTextFieldStyle())
-                    .frame(width: 370, height: 50)
-                    .transition(.asymmetric(
-                        insertion: .opacity.combined(with: .move(edge: .top)),
-                        removal: .opacity.combined(with: .move(edge: .top))
-                    ))
-                    .font(.system(size: 20, weight: .bold, design: .default))
-                    .focused($focusedField, equals: .password)
-                    .onChange(of: password) { newValue in
-                        password = newValue.replacingOccurrences(of: " ", with: "")
-                        resetFieldsBelow(.password)
+                        
+                        if showPasswordRequirements {
+                            PasswordRequirementsView(password: password)
+                                .transition(.opacity)
+                        }
                     }
                 }
 
@@ -206,6 +309,34 @@ struct CreateAccountScreen: View {
                 showContinueButton = false
             }
         }
+    }
+
+    private func isValidFirstName(_ name: String) -> Bool {
+        let lettersOnly = CharacterSet.letters
+        return !name.isEmpty && name.unicodeScalars.allSatisfy { lettersOnly.contains($0) }
+    }
+
+    private func isValidLastName(_ name: String) -> Bool {
+        let lettersOnly = CharacterSet.letters
+        return !name.isEmpty && name.unicodeScalars.allSatisfy { lettersOnly.contains($0) }
+    }
+
+    private func isValidUsername(_ username: String) -> Bool {
+        let allowedCharacters = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_"))
+        return !username.isEmpty && username.unicodeScalars.allSatisfy { allowedCharacters.contains($0) }
+    }
+
+    private func isValidPassword(_ password: String) -> Bool {
+        // Password must be at least 8 characters and contain at least one letter and one number
+        let hasLetter = password.contains { $0.isLetter }
+        let hasNumber = password.contains { $0.isNumber }
+        let hasMinLength = password.count >= 8
+        
+        // Allow letters, numbers, and common special characters
+        let allowedCharacters = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "!@#$%^&*()_+-=[]{}|;:,.<>?"))
+        let hasValidCharacters = password.unicodeScalars.allSatisfy { allowedCharacters.contains($0) }
+        
+        return hasLetter && hasNumber && hasMinLength && hasValidCharacters
     }
 
     private enum Field: Hashable {

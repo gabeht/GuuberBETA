@@ -40,12 +40,15 @@ struct PasswordRequirementsView: View {
 }
 
 struct CreateAccountScreen: View {
+    @StateObject private var firebaseService = FirebaseService()
     @State private var firstName: String = ""
     @State private var lastName: String = ""
     @State private var username: String = ""
+    @State private var email: String = ""
     @State private var password: String = ""
     @State private var reenterPassword: String = ""
     @State private var isUsernameFieldVisible: Bool = false
+    @State private var isEmailFieldVisible: Bool = false
     @State private var isPasswordFieldVisible: Bool = false
     @State private var isReenterPasswordFieldVisible: Bool = false
     @State private var navigateToPhoneNumberVer: Bool = false
@@ -57,12 +60,16 @@ struct CreateAccountScreen: View {
     @State private var shakeFirstNameField: Bool = false
     @State private var shakeLastNameField: Bool = false
     @State private var shakeUsernameField: Bool = false
+    @State private var shakeEmailField: Bool = false
     @State private var shakePasswordField: Bool = false
     @State private var highlightFirstNameField: Bool = false
     @State private var highlightLastNameField: Bool = false
     @State private var highlightUsernameField: Bool = false
+    @State private var highlightEmailField: Bool = false
     @State private var highlightPasswordField: Bool = false
     @State private var showPasswordRequirements: Bool = false
+    @State private var showError: Bool = false
+    @State private var errorMessage: String = ""
 
     var body: some View {
         NavigationStack {
@@ -134,8 +141,8 @@ struct CreateAccountScreen: View {
                     TextField("Username", text: $username, onCommit: {
                         if isValidUsername(username) {
                             withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.5)) {
-                                isPasswordFieldVisible = true
-                                focusedField = .password
+                                isEmailFieldVisible = true
+                                focusedField = .email
                             }
                         } else {
                             withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.5)) {
@@ -164,6 +171,45 @@ struct CreateAccountScreen: View {
                     .onChange(of: username) { newValue in
                         username = newValue.replacingOccurrences(of: " ", with: "")
                         resetFieldsBelow(.username)
+                    }
+                }
+
+                // Email Field
+                if isEmailFieldVisible {
+                    TextField("Email", text: $email, onCommit: {
+                        if isValidEmail(email) {
+                            withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.5)) {
+                                isPasswordFieldVisible = true
+                                focusedField = .password
+                            }
+                        } else {
+                            withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.5)) {
+                                shakeEmailField = true
+                                highlightEmailField = true
+                            }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                                withAnimation {
+                                    shakeEmailField = false
+                                    highlightEmailField = false
+                                }
+                            }
+                        }
+                    })
+                    .textFieldStyle(SoftRoundedTextFieldStyle(highlight: highlightEmailField))
+                    .modifier(ShakeEffect(animatableData: shakeEmailField ? 1 : 0))
+                    .frame(width: 370, height: 50)
+                    .autocapitalization(.none)
+                    .keyboardType(.emailAddress)
+                    .disableAutocorrection(true)
+                    .font(.system(size: 20, weight: .bold, design: .default))
+                    .focused($focusedField, equals: .email)
+                    .transition(.asymmetric(
+                        insertion: .opacity.combined(with: .move(edge: .top)),
+                        removal: .opacity.combined(with: .move(edge: .top))
+                    ))
+                    .onChange(of: email) { newValue in
+                        email = newValue.replacingOccurrences(of: " ", with: "")
+                        resetFieldsBelow(.email)
                     }
                 }
 
@@ -257,7 +303,32 @@ struct CreateAccountScreen: View {
                 // Continue Button
                 if showContinueButton {
                     Button(action: {
-                        navigateToPhoneNumberVer = true
+                        Task {
+                            do {
+                                // Check username availability
+                                let isAvailable = try await firebaseService.checkUsernameAvailability(username)
+                                if !isAvailable {
+                                    showError = true
+                                    errorMessage = "Username is already taken"
+                                    return
+                                }
+                                
+                                // Create user in Firebase
+                                let user = try await firebaseService.createUser(
+                                    firstName: firstName,
+                                    lastName: lastName,
+                                    username: username,
+                                    email: email,
+                                    password: password
+                                )
+                                
+                                // Navigate to phone verification
+                                navigateToPhoneNumberVer = true
+                            } catch {
+                                showError = true
+                                errorMessage = error.localizedDescription
+                            }
+                        }
                     }) {
                         Text("Continue")
                             .font(.system(size: 20, weight: .bold, design: .default))
@@ -266,6 +337,11 @@ struct CreateAccountScreen: View {
                             .background(buttonColor)
                             .cornerRadius(15)
                             .padding(.top, 10)
+                    }
+                    .alert("Error", isPresented: $showError) {
+                        Button("OK", role: .cancel) { }
+                    } message: {
+                        Text(errorMessage)
                     }
                     .transition(.asymmetric(
                         insertion: .opacity.combined(with: .move(edge: .top)),
@@ -298,6 +374,10 @@ struct CreateAccountScreen: View {
                 isUsernameFieldVisible = false
                 fallthrough
             case .username:
+                email = ""
+                isEmailFieldVisible = false
+                fallthrough
+            case .email:
                 password = ""
                 isPasswordFieldVisible = false
                 fallthrough
@@ -326,6 +406,12 @@ struct CreateAccountScreen: View {
         return !username.isEmpty && username.unicodeScalars.allSatisfy { allowedCharacters.contains($0) }
     }
 
+    private func isValidEmail(_ email: String) -> Bool {
+        let emailRegex = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
+        let emailPredicate = NSPredicate(format:"SELF MATCHES %@", emailRegex)
+        return emailPredicate.evaluate(with: email)
+    }
+
     private func isValidPassword(_ password: String) -> Bool {
         // Password must be at least 8 characters and contain at least one letter and one number
         let hasLetter = password.contains { $0.isLetter }
@@ -340,7 +426,7 @@ struct CreateAccountScreen: View {
     }
 
     private enum Field: Hashable {
-        case firstName, lastName, username, password, reenterPassword
+        case firstName, lastName, username, email, password, reenterPassword
     }
 }
 

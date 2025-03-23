@@ -138,78 +138,147 @@ struct CreateAccountScreen: View {
 
                 // Username Field
                 if isUsernameFieldVisible {
-                    TextField("Username", text: $username, onCommit: {
-                        if isValidUsername(username) {
-                            withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.5)) {
-                                isEmailFieldVisible = true
-                                focusedField = .email
-                            }
-                        } else {
-                            withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.5)) {
-                                shakeUsernameField = true
-                                highlightUsernameField = true
-                            }
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-                                withAnimation {
-                                    shakeUsernameField = false
-                                    highlightUsernameField = false
+                    VStack(alignment: .leading, spacing: 4) {
+                        TextField("Username", text: $username, onCommit: {
+                            if isValidUsername(username) {
+                                Task {
+                                    do {
+                                        let isAvailable = try await firebaseService.checkUsernameAvailability(username)
+                                        if isAvailable {
+                                            withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.5)) {
+                                                isEmailFieldVisible = true
+                                                focusedField = .email
+                                            }
+                                        } else {
+                                            withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.5)) {
+                                                shakeUsernameField = true
+                                                highlightUsernameField = true
+                                            }
+                                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                                                withAnimation {
+                                                    shakeUsernameField = false
+                                                    highlightUsernameField = false
+                                                }
+                                            }
+                                            showError = true
+                                            errorMessage = "Username is already taken"
+                                        }
+                                    } catch {
+                                        showError = true
+                                        errorMessage = "Error checking username availability"
+                                    }
                                 }
+                            } else {
+                                withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.5)) {
+                                    shakeUsernameField = true
+                                    highlightUsernameField = true
+                                }
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                                    withAnimation {
+                                        shakeUsernameField = false
+                                        highlightUsernameField = false
+                                    }
+                                }
+                                showError = true
+                                errorMessage = "Username must be 3-20 characters and can only contain letters, numbers, and underscores"
                             }
+                        })
+                        .textFieldStyle(SoftRoundedTextFieldStyle(highlight: highlightUsernameField))
+                        .modifier(ShakeEffect(animatableData: shakeUsernameField ? 1 : 0))
+                        .frame(width: 370, height: 50)
+                        .autocapitalization(.none)
+                        .disableAutocorrection(true)
+                        .font(.system(size: 20, weight: .bold, design: .default))
+                        .focused($focusedField, equals: .username)
+                        .transition(.asymmetric(
+                            insertion: .opacity.combined(with: .move(edge: .top)),
+                            removal: .opacity.combined(with: .move(edge: .top))
+                        ))
+                        .onChange(of: username) { newValue in
+                            username = newValue.replacingOccurrences(of: " ", with: "")
+                            resetFieldsBelow(.username)
                         }
-                    })
-                    .textFieldStyle(SoftRoundedTextFieldStyle(highlight: highlightUsernameField))
-                    .modifier(ShakeEffect(animatableData: shakeUsernameField ? 1 : 0))
-                    .frame(width: 370, height: 50)
-                    .autocapitalization(.words)
-                    .disableAutocorrection(true)
-                    .font(.system(size: 20, weight: .bold, design: .default))
-                    .focused($focusedField, equals: .username)
-                    .transition(.asymmetric(
-                        insertion: .opacity.combined(with: .move(edge: .top)),
-                        removal: .opacity.combined(with: .move(edge: .top))
-                    ))
-                    .onChange(of: username) { newValue in
-                        username = newValue.replacingOccurrences(of: " ", with: "")
-                        resetFieldsBelow(.username)
+                        
+                        if shakeUsernameField {
+                            Text("Username is already taken")
+                                .font(.system(size: 12))
+                                .foregroundColor(.red)
+                                .padding(.leading, 4)
+                                .transition(.opacity)
+                        }
                     }
                 }
 
                 // Email Field
                 if isEmailFieldVisible {
-                    TextField("Email", text: $email, onCommit: {
-                        if isValidEmail(email) {
-                            withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.5)) {
-                                isPasswordFieldVisible = true
-                                focusedField = .password
-                            }
-                        } else {
-                            withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.5)) {
-                                shakeEmailField = true
-                                highlightEmailField = true
-                            }
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-                                withAnimation {
-                                    shakeEmailField = false
-                                    highlightEmailField = false
+                    VStack(alignment: .leading, spacing: 4) {
+                        TextField("Email", text: $email, onCommit: {
+                            if isValidEmail(email) {
+                                Task {
+                                    do {
+                                        let isAvailable = try await firebaseService.checkEmailAvailability(email)
+                                        if isAvailable {
+                                            withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.5)) {
+                                                isPasswordFieldVisible = true
+                                                focusedField = .password
+                                            }
+                                        } else {
+                                            withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.5)) {
+                                                shakeEmailField = true
+                                                highlightEmailField = true
+                                            }
+                                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                                                withAnimation {
+                                                    shakeEmailField = false
+                                                    highlightEmailField = false
+                                                }
+                                            }
+                                            showError = true
+                                            errorMessage = "This email is already registered"
+                                        }
+                                    } catch {
+                                        showError = true
+                                        errorMessage = "Error checking email availability"
+                                    }
                                 }
+                            } else {
+                                withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.5)) {
+                                    shakeEmailField = true
+                                    highlightEmailField = true
+                                }
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                                    withAnimation {
+                                        shakeEmailField = false
+                                        highlightEmailField = false
+                                    }
+                                }
+                                showError = true
+                                errorMessage = "Please enter a valid email address"
                             }
+                        })
+                        .textFieldStyle(SoftRoundedTextFieldStyle(highlight: highlightEmailField))
+                        .modifier(ShakeEffect(animatableData: shakeEmailField ? 1 : 0))
+                        .frame(width: 370, height: 50)
+                        .autocapitalization(.none)
+                        .disableAutocorrection(true)
+                        .font(.system(size: 20, weight: .bold, design: .default))
+                        .focused($focusedField, equals: .email)
+                        .transition(.asymmetric(
+                            insertion: .opacity.combined(with: .move(edge: .top)),
+                            removal: .opacity.combined(with: .move(edge: .top))
+                        ))
+                        .onChange(of: email) { newValue in
+                            email = newValue.replacingOccurrences(of: " ", with: "")
+                            resetFieldsBelow(.email)
                         }
-                    })
-                    .textFieldStyle(SoftRoundedTextFieldStyle(highlight: highlightEmailField))
-                    .modifier(ShakeEffect(animatableData: shakeEmailField ? 1 : 0))
-                    .frame(width: 370, height: 50)
-                    .autocapitalization(.none)
-                    .keyboardType(.emailAddress)
-                    .disableAutocorrection(true)
-                    .font(.system(size: 20, weight: .bold, design: .default))
-                    .focused($focusedField, equals: .email)
-                    .transition(.asymmetric(
-                        insertion: .opacity.combined(with: .move(edge: .top)),
-                        removal: .opacity.combined(with: .move(edge: .top))
-                    ))
-                    .onChange(of: email) { newValue in
-                        email = newValue.replacingOccurrences(of: " ", with: "")
-                        resetFieldsBelow(.email)
+                        
+                        if shakeEmailField {
+                            Text("This email is already registered")
+                                .font(.system(size: 12))
+                                .foregroundColor(.red)
+                                .padding(.leading, 4)
+                                .transition(.opacity)
+                        }
                     }
                 }
 
@@ -263,7 +332,9 @@ struct CreateAccountScreen: View {
                 if isReenterPasswordFieldVisible {
                     SecureField("Re-Enter Password", text: $reenterPassword, onCommit: {
                         if password == reenterPassword {
-                            navigateToPhoneNumberVer = true
+                            withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.5)) {
+                                showContinueButton = true
+                            }
                         } else {
                             withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.5)) {
                                 shakeReenterPasswordField = true
@@ -305,14 +376,6 @@ struct CreateAccountScreen: View {
                     Button(action: {
                         Task {
                             do {
-                                // Check username availability
-                                let isAvailable = try await firebaseService.checkUsernameAvailability(username)
-                                if !isAvailable {
-                                    showError = true
-                                    errorMessage = "Username is already taken"
-                                    return
-                                }
-                                
                                 // Create user in Firebase
                                 let user = try await firebaseService.createUser(
                                     firstName: firstName,
@@ -322,8 +385,13 @@ struct CreateAccountScreen: View {
                                     password: password
                                 )
                                 
-                                // Navigate to phone verification
-                                navigateToPhoneNumberVer = true
+                                // Only navigate if user creation was successful
+                                if user.uid != "" {
+                                    navigateToPhoneNumberVer = true
+                                } else {
+                                    showError = true
+                                    errorMessage = "Failed to create account. Please try again."
+                                }
                             } catch {
                                 showError = true
                                 errorMessage = error.localizedDescription

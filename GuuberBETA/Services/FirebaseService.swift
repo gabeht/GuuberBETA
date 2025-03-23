@@ -6,34 +6,45 @@ class FirebaseService: ObservableObject {
     private let db = Firestore.firestore()
     
     func createUser(firstName: String, lastName: String, username: String, email: String, password: String) async throws -> User {
-        // Create user in Firebase Auth
+        // Convert username to lowercase for storage
+        let lowercaseUsername = username.lowercased()
+        
+        // Check if username is available (case-insensitive)
+        let isAvailable = try await checkUsernameAvailability(lowercaseUsername)
+        guard isAvailable else {
+            throw NSError(domain: "FirebaseService", code: 1, userInfo: [NSLocalizedDescriptionKey: "Username is already taken"])
+        }
+        
+        // Create authentication user
         let authResult = try await Auth.auth().createUser(withEmail: email, password: password)
         
-        // Create user document in Firestore
+        // Create user document
         let user = User(
             firstName: firstName,
             lastName: lastName,
-            username: username,
+            username: lowercaseUsername,
             email: email,
             uid: authResult.user.uid,
             createdAt: Date()
         )
         
-        try await db.collection("users").document(authResult.user.uid).setData([
-            "firstName": user.firstName,
-            "lastName": user.lastName,
-            "username": user.username,
-            "email": user.email,
-            "uid": user.uid,
-            "createdAt": user.createdAt
-        ])
+        try await db.collection("users").document(authResult.user.uid).setData(from: user)
         
         return user
     }
     
     func checkUsernameAvailability(_ username: String) async throws -> Bool {
+        let lowercaseUsername = username.lowercased()
         let snapshot = try await db.collection("users")
-            .whereField("username", isEqualTo: username)
+            .whereField("username", isEqualTo: lowercaseUsername)
+            .getDocuments()
+        
+        return snapshot.documents.isEmpty
+    }
+    
+    func checkEmailAvailability(_ email: String) async throws -> Bool {
+        let snapshot = try await db.collection("users")
+            .whereField("email", isEqualTo: email)
             .getDocuments()
         
         return snapshot.documents.isEmpty

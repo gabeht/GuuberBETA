@@ -142,13 +142,15 @@ struct MainView: View {
                     // Handle Google sign in
                 }) {
                     HStack {
-                        Image(systemName: "g.circle.fill")
-                            .imageScale(.large)
+                        Image("google_logo")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 24, height: 24)
                         Text("Continue with Google")
-                            .font(.system(size: 18, weight: .bold, design: .default)) // Reduced from 20
+                            .font(.system(size: 18, weight: .bold, design: .default))
                     }
                     .foregroundColor(colorScheme == .dark ? .white : .black)
-                    .frame(width: 340, height: 55) // Reduced from 370x60
+                    .frame(width: 340, height: 55)
                     .background(colorScheme == .dark ? Color(.systemGray6) : .white)
                     .cornerRadius(15)
                     .overlay(

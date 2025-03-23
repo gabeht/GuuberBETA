@@ -524,6 +524,7 @@ struct ShakeEffect: GeometryEffect {
             y: 0))
     }
 }
+
 #Preview {
     CreateAccountScreen()
         .modelContainer(for: Item.self, inMemory: true)

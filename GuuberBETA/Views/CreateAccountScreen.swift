@@ -372,7 +372,7 @@ struct CreateAccountScreen: View {
             case .lastName:
                 username = ""
                 isUsernameFieldVisible = false
-                fallthrough
+              fallthrough
             case .username:
                 email = ""
                 isEmailFieldVisible = false

@@ -19,6 +19,10 @@ struct MainView: View {
     @State private var highlightUsernameField: Bool = false
     @FocusState private var focusedField: Field?
     @State private var showCreateAccount = false
+    @StateObject private var firebaseService = FirebaseService()
+    @StateObject private var googleSignInService = GoogleSignInService()
+    @State private var showError = false
+    @State private var errorMessage = ""
     
     var body: some View {
         NavigationStack {
@@ -139,7 +143,15 @@ struct MainView: View {
                 
                 // Continue with Google Button
                 Button(action: {
-                    // Handle Google sign in
+                    Task {
+                        do {
+                            try await googleSignInService.signIn()
+                            // Handle successful sign in
+                        } catch {
+                            showError = true
+                            errorMessage = error.localizedDescription
+                        }
+                    }
                 }) {
                     HStack {
                         Image("google_logo")

@@ -3,6 +3,7 @@ import GoogleSignIn
 import FirebaseAuth
 import FirebaseFirestore
 
+@MainActor
 class GoogleSignInService: ObservableObject {
     @Published var isSignedIn = false
     @Published var error: Error?
@@ -45,16 +46,12 @@ class GoogleSignInService: ObservableObject {
                     createdAt: Date()
                 )
                 
-                try await db.collection("users").document(authResult.user.uid).setData(from: user)
+                try db.collection("users").document(authResult.user.uid).setData(from: user)
             }
             
-            DispatchQueue.main.async {
-                self.isSignedIn = true
-            }
+            self.isSignedIn = true
         } catch {
-            DispatchQueue.main.async {
-                self.error = error
-            }
+            self.error = error
             throw error
         }
     }
@@ -63,13 +60,9 @@ class GoogleSignInService: ObservableObject {
         do {
             try Auth.auth().signOut()
             GIDSignIn.sharedInstance.signOut()
-            DispatchQueue.main.async {
-                self.isSignedIn = false
-            }
+            self.isSignedIn = false
         } catch {
-            DispatchQueue.main.async {
-                self.error = error
-            }
+            self.error = error
             throw error
         }
     }

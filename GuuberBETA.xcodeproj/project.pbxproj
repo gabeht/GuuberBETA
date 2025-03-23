@@ -40,9 +40,22 @@
 		326336212D6D1077009C705D /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.2.sdk/System/Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		3275E89B2D90934300510336 /* Exceptions for "GuuberBETA" folder in "GuuberBETA" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 326335E62D6D0060009C705D /* GuuberBETA */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		326335E92D6D0060009C705D /* GuuberBETA */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				3275E89B2D90934300510336 /* Exceptions for "GuuberBETA" folder in "GuuberBETA" target */,
+			);
 			path = GuuberBETA;
 			sourceTree = "<group>";
 		};
@@ -433,6 +446,7 @@
 				DEVELOPMENT_TEAM = DC9JSV32KU;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = GuuberBETA/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Guuber;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.travel";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
@@ -473,6 +487,7 @@
 				DEVELOPMENT_TEAM = DC9JSV32KU;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = GuuberBETA/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Guuber;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.travel";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;

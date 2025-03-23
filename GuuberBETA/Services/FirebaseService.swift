@@ -28,7 +28,7 @@ class FirebaseService: ObservableObject {
             createdAt: Date()
         )
         
-        try await db.collection("users").document(authResult.user.uid).setData(from: user)
+        try db.collection("users").document(authResult.user.uid).setData(from: user)
         
         return user
     }

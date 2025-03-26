@@ -72,4 +72,25 @@ class FirebaseService: ObservableObject {
     func signOut() throws {
         try Auth.auth().signOut()
     }
+    
+    func updateUserProfile(username: String, password: String, firstName: String, lastName: String) async throws {
+        guard let user = Auth.auth().currentUser else {
+            throw NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "No user logged in"])
+        }
+        
+        // Update password
+        try await user.updatePassword(to: password)
+        
+        // Create or update user document
+        let userData: [String: Any] = [
+            "firstName": firstName,
+            "lastName": lastName,
+            "username": username,
+            "email": user.email ?? "",
+            "uid": user.uid,
+            "createdAt": FieldValue.serverTimestamp()
+        ]
+        
+        try await db.collection("users").document(user.uid).setData(userData, merge: true)
+    }
 } 

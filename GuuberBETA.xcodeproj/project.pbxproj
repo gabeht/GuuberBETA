@@ -14,6 +14,7 @@
 		3275E8952D908D1A00510336 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 3275E8942D908D1A00510336 /* GoogleSignIn */; };
 		3275E8972D908D2100510336 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 3275E8962D908D2100510336 /* GoogleSignInSwift */; };
 		3275E8992D908D3400510336 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 3275E8982D908D3400510336 /* FirebaseCore */; };
+		3275E8A42D949F9700510336 /* PhoneNumberKit in Frameworks */ = {isa = PBXBuildFile; productRef = 3275E8A32D949F9700510336 /* PhoneNumberKit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -77,6 +78,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				3275E8952D908D1A00510336 /* GoogleSignIn in Frameworks */,
+				3275E8A42D949F9700510336 /* PhoneNumberKit in Frameworks */,
 				3263361F2D6D054B009C705D /* FirebaseFirestoreCombine-Community in Frameworks */,
 				326336222D6D1077009C705D /* UIKit.framework in Frameworks */,
 				3275E8972D908D2100510336 /* GoogleSignInSwift in Frameworks */,
@@ -158,6 +160,7 @@
 				3275E8942D908D1A00510336 /* GoogleSignIn */,
 				3275E8962D908D2100510336 /* GoogleSignInSwift */,
 				3275E8982D908D3400510336 /* FirebaseCore */,
+				3275E8A32D949F9700510336 /* PhoneNumberKit */,
 			);
 			productName = GuuberBETA;
 			productReference = 326335E72D6D0060009C705D /* GuuberBETA.app */;
@@ -244,6 +247,7 @@
 			packageReferences = (
 				326336192D6D054B009C705D /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				32B2949C2D90874300D99FE0 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+				3275E8A22D949F7E00510336 /* XCRemoteSwiftPackageReference "PhoneNumberKit" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 326335E82D6D0060009C705D /* Products */;
@@ -651,6 +655,14 @@
 				minimumVersion = 11.8.1;
 			};
 		};
+		3275E8A22D949F7E00510336 /* XCRemoteSwiftPackageReference "PhoneNumberKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/marmelroy/PhoneNumberKit.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.0.2;
+			};
+		};
 		32B2949C2D90874300D99FE0 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/google/GoogleSignIn-iOS.git";
@@ -691,6 +703,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 326336192D6D054B009C705D /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseCore;
+		};
+		3275E8A32D949F9700510336 /* PhoneNumberKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3275E8A22D949F7E00510336 /* XCRemoteSwiftPackageReference "PhoneNumberKit" */;
+			productName = PhoneNumberKit;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

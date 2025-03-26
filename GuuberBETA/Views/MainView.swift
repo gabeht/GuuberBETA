@@ -135,10 +135,6 @@ struct MainView: View {
                 }
                 .navigationDestination(isPresented: $showCreateAccount) {
                     CreateAccountScreen()
-                        .transition(.asymmetric(
-                            insertion: .move(edge: .trailing).combined(with: .opacity),
-                            removal: .move(edge: .leading).combined(with: .opacity)
-                        ))
                 }
                 
                 // Continue with Google Button
@@ -204,6 +200,12 @@ struct MainView: View {
             }
             .padding(.horizontal, 20)
             .animation(.spring(response: 0.3, dampingFraction: 0.8), value: username)
+            .sheet(isPresented: $showCreateAccount) {
+                CreateAccountScreen()
+            }
+            .sheet(isPresented: $googleSignInService.showCompleteRegistration) {
+                CompleteRegistration(googleSignInService: googleSignInService)
+            }
         }
     }
     
